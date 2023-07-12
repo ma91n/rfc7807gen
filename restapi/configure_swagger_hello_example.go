@@ -3,7 +3,9 @@
 package restapi
 
 import (
+	"context"
 	"crypto/tls"
+	"fmt"
 	"net/http"
 
 	"github.com/go-openapi/errors"
@@ -22,31 +24,23 @@ func configureFlags(api *operations.SwaggerHelloExampleAPI) {
 }
 
 func configureAPI(api *operations.SwaggerHelloExampleAPI) http.Handler {
-	// configure the api here
 	api.ServeError = errors.ServeError
-
-	// Set your custom logger if needed. Default one is log.Printf
-	// Expected interface func(string, ...interface{})
-	//
-	// Example:
-	// api.Logger = log.Printf
-
 	api.UseSwaggerUI()
-	// To continue using redoc as your UI, uncomment the following line
-	// api.UseRedoc()
+
+	api.SetDefaultConsumes("application/json")
+	api.SetDefaultProduces("application/json")
 
 	api.JSONConsumer = runtime.JSONConsumer()
-
 	api.JSONProducer = runtime.JSONProducer()
 
 	api.ExampleHelloHandler = example.HelloHandlerFunc(func(params example.HelloParams) middleware.Responder {
+		fmt.Println("here")
 		return example.NewHelloOK().WithPayload(&models.Hello{
 			Message: "test ok",
 		})
 	})
 
 	api.PreServerShutdown = func() {}
-
 	api.ServerShutdown = func() {}
 
 	return setupGlobalMiddleware(api.Serve(setupMiddlewares))
@@ -67,11 +61,37 @@ func configureServer(s *http.Server, scheme, addr string) {
 // The middleware configuration is for the handler executors. These do not apply to the swagger.json document.
 // The middleware executes after routing but before authentication, binding and validation
 func setupMiddlewares(handler http.Handler) http.Handler {
-	return handler
+	return RfcMiddleware(handler)
 }
 
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	return handler
+}
+
+type captureResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func NewCaptureResponseWriter(w http.ResponseWriter) *captureResponseWriter {
+	return &captureResponseWriter{w, http.StatusOK}
+}
+
+func (lrw *captureResponseWriter) WriteHeader(code int) {
+	lrw.statusCode = code
+	lrw.ResponseWriter.WriteHeader(code)
+	//lrw.ResponseWriter.Header().Set("Content-Type", "application/problem+json")
+}
+
+func RfcMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mediaTypeCtx := context.WithValue(r.Context(), int8(2), "application/json") // 2:ctxResponseFormat
+
+		r = r.WithContext(mediaTypeCtx)
+
+		lrw := NewCaptureResponseWriter(w)
+		next.ServeHTTP(lrw, r)
+	})
 }

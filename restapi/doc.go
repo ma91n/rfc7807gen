@@ -14,6 +14,7 @@
 //    - application/json
 //
 //  Produces:
+//    - application/json
 //    - application/problem+json
 //
 // swagger:meta

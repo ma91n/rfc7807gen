@@ -47,7 +47,7 @@ func (a *Client) Hello(params *HelloParams) (*HelloOK, error) {
 		ID:                 "hello",
 		Method:             "GET",
 		PathPattern:        "/hello",
-		ProducesMediaTypes: []string{"application/problem+json"},
+		ProducesMediaTypes: []string{"application/json", "application/problem+json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,

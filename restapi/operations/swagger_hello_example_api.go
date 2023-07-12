@@ -78,6 +78,7 @@ type SwaggerHelloExampleAPI struct {
 	JSONConsumer runtime.Consumer
 
 	// JSONProducer registers a producer for the following mime types:
+	//   - application/json
 	//   - application/problem+json
 	JSONProducer runtime.Producer
 
@@ -208,6 +209,8 @@ func (o *SwaggerHelloExampleAPI) ProducersFor(mediaTypes []string) map[string]ru
 	result := make(map[string]runtime.Producer, len(mediaTypes))
 	for _, mt := range mediaTypes {
 		switch mt {
+		case "application/json":
+			result["application/json"] = o.JSONProducer
 		case "application/problem+json":
 			result["application/problem+json"] = o.JSONProducer
 		}

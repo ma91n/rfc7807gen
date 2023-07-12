@@ -13,7 +13,7 @@ import (
 func main() {
 
 	rt := httptransport.New(
-		"localhost:60270",
+		"localhost:8081",
 		client.DefaultBasePath,
 		client.DefaultSchemes)
 	rt.Consumers["application/problem+json"] = runtime.JSONConsumer()

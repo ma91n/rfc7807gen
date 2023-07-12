@@ -12,6 +12,11 @@ tags:
   description: "Example"
 schemes:
 - "http"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+- "application/problem+json"
 paths:
   /hello:
     get:
@@ -20,10 +25,6 @@ paths:
       summary: "hello api"
       description: "hello api"
       operationId: "hello"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/problem+json"
       responses:
         "200":
           description: "successful operation"
